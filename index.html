@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text to Speech Converter</title>
+    <script>
+        async function submitForm(event) {
+            event.preventDefault(); // 阻止表单的默认提交行为
+
+            var formData = new FormData(document.getElementById('ttsForm'));
+            const response = await fetch('http://112.124.3.24:50053/generate_audio', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (response.ok && data.filename) {
+                // 更新音频播放器的src属性，确保使用完整的URL路径
+                const audioUrl = `http://112.124.3.24:50053/${data.filename}`;
+                document.getElementById('audioPlayer').src = audioUrl;
+                // 显示音频播放器和下载链接
+                document.getElementById('audioControls').style.display = 'block';
+                // 自动播放生成的音频
+                document.getElementById('audioPlayer').play();
+                // 设置下载链接的href属性
+                document.getElementById('downloadLink').href = audioUrl;
+                document.getElementById('downloadLink').download = 'generated_audio.mp3'; // 强制下载文件名为generated_audio.mp3
+            } else {
+                console.error('Error:', data.error);
+                alert('Failed to generate audio: ' + data.error);
+                // 隐藏音频控制组件
+                document.getElementById('audioControls').style.display = 'none';
+            }
+        }
+
+        // 动态显示选择的值
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('rate').addEventListener('input', function() {
+                document.getElementById('rateValue').textContent = `${this.value}%`;
+            });
+            document.getElementById('volume').addEventListener('input', function() {
+                document.getElementById('volumeValue').textContent = `${this.value}%`;
+            });
+            document.getElementById('pitch').addEventListener('input', function() {
+                document.getElementById('pitchValue').textContent = `${this.value}Hz`;
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Text to Speech Converter</h1>
+    <form id="ttsForm" onsubmit="submitForm(event);">
+        <label for="text">Enter text:</label><br>
+        <textarea id="text" name="text" rows="4" cols="50" placeholder="Type your text here..." required></textarea><br>
+
+        <label for="voicetype">Voice Type:</label><br>
+        <select id="voicetype" name="voicetype" required>
+            <option value="中文">Chinese</option>
+            <option value="英语">English</option>
+            <option value="日语">Japanese</option>
+            <option value="韩语">Korean</option>
+            <option value="法语">French</option>
+            <option value="德语">German</option>
+            <option value="俄语">Russian</option>
+            <option value="西班牙语">Spanish</option>
+            <option value="葡萄牙语">Portuguese</option>
+            <!-- 继续添加其他语言选项 -->
+        </select><br>
+
+        <label for="gender">Gender:</label><br>
+        <select id="gender" name="gender" required>
+            <option value="男">Male</option>
+            <option value="女">Female</option>
+        </select><br>
+
+        <label for="rate">Rate (Speed):</label><br>
+        <input type="range" id="rate" name="rate" min="-100" max="100" value="0"><br>
+        <span id="rateValue">+0%</span><br>
+
+        <label for="volume">Volume:</label><br>
+        <input type="range" id="volume" name="volume" min="-100" max="100" value="0"><br>
+        <span id="volumeValue">+0%</span><br>
+
+        <label for="pitch">Pitch:</label><br>
+        <input type="range" id="pitch" name="pitch" min="-100" max="100" value="0"><br>
+        <span id="pitchValue">+0Hz</span><br>
+
+        <button type="submit">Convert Text to Speech</button>
+    </form>
+
+    <!-- 初始状态下隐藏音频控制组件 -->
+    <div id="audioControls" style="display:none;">
+        <audio controls id="audioPlayer">
+            Your browser does not support the audio element.
+        </audio>
+        <a href="" id="downloadLink" style="display:block;margin-top:10px;">Download Audio</a>
+    </div>
+</body>
+</html>
